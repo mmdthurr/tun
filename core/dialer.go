@@ -2,39 +2,16 @@ package core
 
 import (
 	"crypto/tls"
-	"io"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/xtaci/smux"
 )
 
 type Dialer struct {
-	Smng    *Sessions
 	Pools   []*Pool
 	BckAddr string
-}
-
-func ReadOnBck(c net.Conn, id uint16, p *Pool) {
-	for {
-		buff := make([]byte, 8*4096)
-		n, err := c.Read(buff)
-		if err != nil {
-			cf := Frame{
-				Flag:    1,
-				Session: id,
-				Payload: nil,
-			}
-			p.Write(cf.Encode())
-			return
-		}
-		f := Frame{
-			Flag:    0,
-			Session: id,
-			Size:    uint16(n),
-			Payload: buff[:n],
-		}
-		p.Write(f.Encode())
-	}
 }
 
 func (d *Dialer) Dial(addr string, p *Pool) {
@@ -43,6 +20,7 @@ func (d *Dialer) Dial(addr string, p *Pool) {
 	if err != nil {
 		return
 	}
+	defer c.Close()
 
 	if p.Tls {
 		conf := tls.Config{
@@ -51,39 +29,28 @@ func (d *Dialer) Dial(addr string, p *Pool) {
 		c = tls.Client(c, &conf)
 	}
 
-	p.Add(c)
-	defer p.Remove(c)
-
+	smuxsrv, err := smux.Server(c, nil)
+	if err != nil {
+		return
+	}
 	for {
-		buff := make([]byte, 5)
-		n, err := c.Read(buff)
+		stream, err := smuxsrv.AcceptStream()
 		if err != nil {
 			return
 		}
 
-		f := DecodeFrame(buff[:n])
-		switch f.Flag {
-		case 0:
-			{
-				sc := d.Smng.Get(f.Session)
+		go func(s *smux.Stream) {
+			bck, err := net.Dial("tcp", d.BckAddr)
+			if err != nil {
+				s.Close()
+				return
+			}
 
-				if sc == nil {
-					bckc, err := net.Dial("tcp", d.BckAddr)
-					if err != nil {
-						continue
-					}
-					d.Smng.Add(f.Session, bckc)
-					sc = d.Smng.Get(f.Session)
-					go ReadOnBck(bckc, f.Session, p)
-				}
-				io.CopyN(sc, c, int64(f.Size))
-			}
-		case 1:
-			{
-				d.Smng.Remove(f.Session)
-			}
-		}
+			Copy(bck, s)
+
+		}(stream)
 	}
+
 }
 
 func (d *Dialer) StartDialPool(p *Pool) {

@@ -1,70 +1,67 @@
 package core
 
 import (
-	"net"
 	"sync"
-)
+	"time"
 
-type Connection struct {
-	mu     sync.Mutex
-	Stream net.Conn
-}
+	"github.com/xtaci/smux"
+)
 
 type Pool struct {
 	mu sync.Mutex
 
-	Size int    // for dialer
-	Addr string // for dialer
-	Tls  bool   // for dialer
+	Size int
+	Tls  bool
+	Addr string
 
-	Conns []*Connection
-	Smng  *Sessions
-}
-
-func (p *Pool) Write(b []byte) {
-	for _, c := range p.Conns {
-		if c.mu.TryLock() {
-			defer c.mu.Unlock()
-			_, err := c.Stream.Write(b)
-			if err != nil {
-				p.Remove(c.Stream)
-				continue
-			}
-			return
-		}
-	}
-
+	SmuxSession []*smux.Session
 }
 
 func NewPool(max_size int) *Pool {
-	p := Pool{
-		Size: max_size,
-	}
+	p := Pool{Size: max_size}
 	return &p
 }
 
-func (p *Pool) Add(conn net.Conn) {
+func (p *Pool) Add(s *smux.Session) {
 
 	p.mu.Lock()
 	defer p.mu.Unlock()
-
-	c := Connection{
-		Stream: conn,
-	}
-
-	p.Conns = append(p.Conns, &c)
+	p.SmuxSession = append(p.SmuxSession, s)
 
 }
 
-func (p *Pool) Remove(conn net.Conn) bool {
+func (p *Pool) Remove(session *smux.Session) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	for i, c := range p.Conns {
-		if c.Stream == conn {
-			p.Conns = append(p.Conns[:i], p.Conns[i+1:]...)
-			conn.Close()
+
+	for i, s := range p.SmuxSession {
+		if s == session {
+			p.SmuxSession = append(p.SmuxSession[:i], p.SmuxSession[i+1:]...)
+			session.Close()
 			return true
 		}
 	}
 	return false
+}
+
+func (p *Pool) OpenStream() *smux.Stream {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	select {
+	case <-time.After(5 * time.Second):
+		return nil
+	default:
+		for _, s := range p.SmuxSession {
+			stream, err := s.OpenStream()
+			if err == smux.ErrGoAway {
+				continue
+			} else if err != nil {
+				go p.Remove(s)
+				continue
+			}
+			return stream
+		}
+
+		return nil
+	}
 }

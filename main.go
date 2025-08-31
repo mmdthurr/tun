@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"mmd/tun/core"
-	"net"
 	"sync"
 )
 
@@ -16,12 +15,6 @@ func main() {
 	switch conf.Mode {
 	case "listener":
 		{
-			p := core.NewPool(0)
-			smng := &core.Sessions{
-				Sc: make(map[uint16]net.Conn),
-			}
-			p.Smng = smng
-
 			peers := make(map[string]*core.Pool)
 			for _, peer := range conf.TrustedPeers {
 				peers[peer] = core.NewPool(0)
@@ -31,7 +24,6 @@ func main() {
 				l := core.Listener{
 					Laddr: conf.Laddr,
 					Pools: peers,
-					Smng:  smng,
 					Sec: core.TransportSec{
 						Type: "tls",
 						Key:  conf.TlsSetting.Key,
@@ -45,7 +37,6 @@ func main() {
 				l := core.Listener{
 					Laddr: conf.Laddr,
 					Pools: peers,
-					Smng:  smng,
 					Sec: core.TransportSec{
 						Type: "",
 					},
@@ -60,21 +51,16 @@ func main() {
 			var wg sync.WaitGroup
 			wg.Add(1)
 
-			smng := &core.Sessions{
-				Sc: make(map[uint16]net.Conn),
-			}
 			var pools []*core.Pool
 			for _, peer := range conf.Peers {
 
 				p := core.NewPool(peer.PoolSize)
 				p.Addr = peer.Addr
 				p.Tls = peer.Tls
-				p.Smng = smng
 				pools = append(pools, p)
 
 			}
 			d := core.Dialer{
-				Smng:    smng,
 				Pools:   pools,
 				BckAddr: conf.BckAddr,
 			}
