@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 )
@@ -13,16 +14,17 @@ type Tls struct {
 type Peer struct {
 	Addr     string `json:"addr"`
 	Tls      bool   `json:"tls"`
+	ShortID  string `json:"shortid"`
 	PoolSize int    `json:"poolsize"`
 }
 
 type Config struct {
 	Mode string `json:"mode"`
 	// listener
-	Laddr        string   `json:"laddr"`
-	Sec          string   `json:"sec"`
-	TlsSetting   Tls      `json:"tls"`
-	TrustedPeers []string `json:"trustedpeers"`
+	Laddr        string `json:"laddr"`
+	Sec          string `json:"sec"`
+	TlsSetting   Tls    `json:"tls"`
+	TrustedPeers []Peer `json:"trustedpeers"`
 
 	// dialer
 	BckAddr string `json:"bckaddr"`
@@ -32,6 +34,7 @@ type Config struct {
 func GetConfig(path string) Config {
 	configFile, err := os.Open(path)
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
 	}
 	defer configFile.Close()

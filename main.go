@@ -16,14 +16,18 @@ func main() {
 	case "listener":
 		{
 			peers := make(map[string]*core.Pool)
+			shids := make(map[string]string)
+
 			for _, peer := range conf.TrustedPeers {
-				peers[peer] = core.NewPool(0)
+				peers[peer.Addr] = core.NewPool(0)
+				shids[peer.ShortID] = peer.Addr
 			}
 
 			if conf.Sec == "tls" {
 				l := core.Listener{
 					Laddr: conf.Laddr,
 					Pools: peers,
+					ShId:  shids,
 					Sec: core.TransportSec{
 						Type: "tls",
 						Key:  conf.TlsSetting.Key,

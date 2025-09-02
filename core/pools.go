@@ -47,6 +47,9 @@ func (p *Pool) Remove(session *smux.Session) bool {
 func (p *Pool) OpenStream() *smux.Stream {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	if len(p.SmuxSession) == 0 {
+		return nil
+	}
 	select {
 	case <-time.After(5 * time.Second):
 		return nil

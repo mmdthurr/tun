@@ -24,6 +24,16 @@ type Listener struct {
 	Laddr string
 	Sec   TransportSec
 	Pools map[string]*Pool
+	ShId  map[string]string
+}
+
+func GetShId(h string) string {
+	// customize it based on your domain since my domain is kkdfs.usa.khamenei.ir then [1] would result in usa
+	split := strings.Split(h, ".")
+	if len(split) < 2 {
+		return ""
+	}
+	return split[1]
 }
 
 func GetHost(buff []byte) (string, bool) {
@@ -86,13 +96,25 @@ func (li *Listener) Dispatch(c net.Conn) {
 		}
 
 		h, ok := GetHost(tmp[:n])
+
 		if !ok {
 			// no host response
 			return
 		}
 		fmt.Println(h)
 
-		p, ok := li.Pools[h]
+		shid := GetShId(h)
+		if shid == "" {
+			// no shid
+			return
+		}
+
+		a, ok := li.ShId[shid]
+		if !ok {
+			// return no valid shid
+		}
+
+		p, ok := li.Pools[a]
 		if !ok {
 			// no pool response
 			return

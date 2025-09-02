@@ -11,10 +11,16 @@ l.conf
    "cert": "/home/mmd/code/tun/tst/tls.cert",  
    "key": "/home/mmd/code/tun/tst/tls.key"  
  },  
- "trustedpeers": [  
-   "127.0.0.1",  
-   "2.3.4.5"  
- ]  
+ "trustedpeers": [
+    {
+      "addr": "127.0.0.1",
+      "shortid": "nl"
+    },
+    {
+      "addr": "2.3.4.5",
+      "shortid": "us"
+    }
+  ]
 }
 ```
 
