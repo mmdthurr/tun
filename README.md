@@ -11,6 +11,7 @@ l.conf
    "cert": "/home/mmd/code/tun/tst/tls.cert",  
    "key": "/home/mmd/code/tun/tst/tls.key"  
  },  
+ "fallback": ":3001",
  "trustedpeers": [
     {
       "addr": "127.0.0.1",

@@ -25,7 +25,7 @@ type Config struct {
 	Sec          string `json:"sec"`
 	TlsSetting   Tls    `json:"tls"`
 	TrustedPeers []Peer `json:"trustedpeers"`
-
+	FallBack     string `json:"fallback"`
 	// dialer
 	BckAddr string `json:"bckaddr"`
 	Peers   []Peer `json:"peers"`

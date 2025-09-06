@@ -33,6 +33,7 @@ func main() {
 						Key:  conf.TlsSetting.Key,
 						Cert: conf.TlsSetting.Cert,
 					},
+					Fallback: conf.FallBack,
 				}
 
 				l.Start()
@@ -44,6 +45,7 @@ func main() {
 					Sec: core.TransportSec{
 						Type: "",
 					},
+					Fallback: conf.FallBack,
 				}
 
 				l.Start()

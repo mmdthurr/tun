@@ -2,7 +2,6 @@ package core
 
 import (
 	"crypto/tls"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -25,6 +24,8 @@ type Listener struct {
 	Sec   TransportSec
 	Pools map[string]*Pool
 	ShId  map[string]string
+
+	Fallback string
 }
 
 func GetShId(h string) string {
@@ -73,6 +74,15 @@ func Copy(c1, c2 net.Conn) {
 
 }
 
+func (li *Listener) PerformFallback(c net.Conn, tmp []byte) {
+	fc, err := net.Dial("tcp", li.Fallback)
+	if err != nil {
+		return
+	}
+	fc.Write(tmp)
+	Copy(fc, c)
+}
+
 func (li *Listener) Dispatch(c net.Conn) {
 	inaddr := strings.Split(c.RemoteAddr().String(), ":")[0]
 	log.Println(inaddr)
@@ -96,27 +106,30 @@ func (li *Listener) Dispatch(c net.Conn) {
 		}
 
 		h, ok := GetHost(tmp[:n])
-
 		if !ok {
 			// no host response
+			li.PerformFallback(c, tmp[:n])
 			return
 		}
-		fmt.Println(h)
 
 		shid := GetShId(h)
 		if shid == "" {
 			// no shid
+			li.PerformFallback(c, tmp[:n])
 			return
 		}
 
 		a, ok := li.ShId[shid]
 		if !ok {
 			// return no valid shid
+			li.PerformFallback(c, tmp[:n])
+			return
 		}
 
 		p, ok := li.Pools[a]
 		if !ok {
 			// no pool response
+			li.PerformFallback(c, tmp[:n])
 			return
 		}
 		// test pool
