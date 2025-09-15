@@ -23,32 +23,61 @@ func main() {
 				shids[peer.ShortID] = peer.Addr
 			}
 
-			if conf.Sec == "tls" {
-				l := core.Listener{
-					Laddr: conf.Laddr,
-					Pools: peers,
-					ShId:  shids,
-					Sec: core.TransportSec{
-						Type: "tls",
-						Key:  conf.TlsSetting.Key,
-						Cert: conf.TlsSetting.Cert,
-					},
-					Fallback: conf.FallBack,
+			switch conf.Sec {
+
+			case "tls":
+				{
+					l := core.Listener{
+						Laddr: conf.Laddr,
+						Pools: peers,
+						ShId:  shids,
+						Sec: core.TransportSec{
+							Type: "tls",
+							Key:  conf.TlsSetting.Key,
+							Cert: conf.TlsSetting.Cert,
+						},
+						Fallback: conf.FallBack,
+					}
+
+					l.Start()
 				}
+			case "utls":
+				{
+					l := core.Listener{
+						Laddr: conf.Laddr,
+						Pools: peers,
+						ShId:  shids,
+						Sec: core.TransportSec{
+							Type: "utls",
 
-				l.Start()
-			} else {
+							//tls
+							Key:  conf.TlsSetting.Key,
+							Cert: conf.TlsSetting.Cert,
 
-				l := core.Listener{
-					Laddr: conf.Laddr,
-					Pools: peers,
-					Sec: core.TransportSec{
-						Type: "",
-					},
-					Fallback: conf.FallBack,
+							//utls
+							UtlsPk:      conf.UtlsSetting.PrivateKey,
+							FallBack:    conf.UtlsSetting.FallBack,
+							Servernames: conf.UtlsSetting.ServerNames,
+						},
+						Fallback: conf.FallBack,
+					}
+
+					l.Start()
 				}
+			default:
+				{
+					l := core.Listener{
+						Laddr: conf.Laddr,
+						Pools: peers,
+						Sec: core.TransportSec{
+							Type: "",
+						},
+						Fallback: conf.FallBack,
+					}
 
-				l.Start()
+					l.Start()
+
+				}
 			}
 		}
 

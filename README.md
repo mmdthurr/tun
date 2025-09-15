@@ -3,25 +3,33 @@ i have tried to build my own framer and session manager with connection pool alo
 
 l.conf 
 ```
-{  
- "mode": "listener",  
- "laddr": "0.0.0.0:5050",  
- "sec": "tls",  
- "tls": {  
-   "cert": "/home/mmd/code/tun/tst/tls.cert",  
-   "key": "/home/mmd/code/tun/tst/tls.key"  
- },  
- "fallback": ":3001",
- "trustedpeers": [
-    {
-      "addr": "127.0.0.1",
-      "shortid": "nl"
+{
+    "mode": "listener",
+    "laddr": "0.0.0.0:5050",
+    "fallback": "192.168.1.7:3002",
+    "sec": "utls",
+    "tls": {
+        "cert": "/home/mmd/code/tun/tst/tls.cert",
+        "key": "/home/mmd/code/tun/tst/tls.key"
     },
-    {
-      "addr": "2.3.4.5",
-      "shortid": "us"
-    }
-  ]
+    "utls": {
+        "privatekey": "<privatekey>",
+        "fallback": "aparat.com:443",
+        "servernames": [
+            "www.aparat.com",
+            "aparat.com"
+        ]
+    },
+    "trustedpeers": [
+        {
+            "addr": "127.0.0.1",
+            "shortid": "nl"
+        },
+        {
+            "addr": "2.3.4.5",
+            "shortid": "us"
+        }
+    ]
 }
 ```
 

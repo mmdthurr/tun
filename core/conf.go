@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 )
@@ -11,6 +10,13 @@ type Tls struct {
 	Cert string `json:"cert"`
 	Key  string `json:"key"`
 }
+
+type Utls struct {
+	PrivateKey  string   `json:"privatekey"`
+	FallBack    string   `json:"fallback"`
+	ServerNames []string `json:"servernames"`
+}
+
 type Peer struct {
 	Addr     string `json:"addr"`
 	Tls      bool   `json:"tls"`
@@ -24,6 +30,7 @@ type Config struct {
 	Laddr        string `json:"laddr"`
 	Sec          string `json:"sec"`
 	TlsSetting   Tls    `json:"tls"`
+	UtlsSetting  Utls   `json:"utls"`
 	TrustedPeers []Peer `json:"trustedpeers"`
 	FallBack     string `json:"fallback"`
 	// dialer
@@ -34,7 +41,7 @@ type Config struct {
 func GetConfig(path string) Config {
 	configFile, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
+		log.Println("config parse err")
 		log.Fatal(err)
 	}
 	defer configFile.Close()

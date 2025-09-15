@@ -1,7 +1,9 @@
 package core
 
 import (
+	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"io"
 	"log"
 	"net"
@@ -10,13 +12,19 @@ import (
 	"time"
 
 	"github.com/xtaci/smux"
+	"github.com/xtls/reality"
 )
 
 type TransportSec struct {
-	Type       string
-	Cert       string
-	Key        string
-	Servername string
+	Type string
+	//tls
+	Cert string
+	Key  string
+
+	//utls
+	UtlsPk      string //base64 key
+	FallBack    string
+	Servernames []string
 }
 
 type Listener struct {
@@ -166,6 +174,7 @@ func (li *Listener) Start() {
 		log.Fatal(err)
 		return
 	}
+
 	switch li.Sec.Type {
 	case "tls":
 		{
@@ -184,6 +193,75 @@ func (li *Listener) Start() {
 				}
 				tlsc := tls.Server(c, &conf)
 				go li.Dispatch(tlsc)
+			}
+
+		}
+	case "utls":
+		{
+			//tls conf for node to node
+			cert, err := tls.LoadX509KeyPair(li.Sec.Cert, li.Sec.Key)
+			if err != nil {
+				log.Printf("tls err %s", err)
+			}
+			tlsconf := tls.Config{
+				Certificates: []tls.Certificate{cert},
+			}
+
+			//utls for client
+			pk, err := base64.RawURLEncoding.DecodeString(li.Sec.UtlsPk)
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+
+			var dialer net.Dialer
+			rconf := &reality.Config{
+				DialContext: dialer.DialContext,
+
+				Show:                   false,
+				Type:                   "tcp",
+				Dest:                   li.Sec.FallBack,
+				Xver:                   byte(0),
+				PrivateKey:             pk,
+				MaxTimeDiff:            0,
+				NextProtos:             nil, // should be nil
+				SessionTicketsDisabled: true,
+			}
+
+			rconf.ServerNames = make(map[string]bool)
+			for _, sni := range li.Sec.Servernames {
+				rconf.ServerNames[sni] = true
+			}
+
+			// only empty short ids are accepted
+			rconf.ShortIds = make(map[[8]byte]bool)
+			var k [8]byte
+			rconf.ShortIds[k] = true
+
+			go reality.DetectPostHandshakeRecordsLens(rconf)
+
+			for {
+				c, err := l.Accept()
+				if err != nil {
+					return
+				}
+
+				// pre dispatch cause implementing reality client is not feasible right now
+				go func() {
+					inaddr := strings.Split(c.RemoteAddr().String(), ":")[0]
+					_, ok := li.Pools[inaddr]
+					if ok {
+						tlsc := tls.Server(c, &tlsconf)
+						go li.Dispatch(tlsc)
+
+					} else {
+						c, err = reality.Server(context.Background(), c, rconf)
+						if err != nil {
+							return
+						}
+						go li.Dispatch(c)
+					}
+				}()
 			}
 
 		}
