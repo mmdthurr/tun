@@ -1,4 +1,4 @@
-tun is dead simple tls tunnel previously tlstun built on top of smux.
+tun is dead simple tls/reality tunnel previously tlstun built on top of smux.
 i have tried to build my own framer and session manager with connection pool along, but the performance was horribly low.
 
 l.conf 
