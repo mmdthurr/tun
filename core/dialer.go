@@ -12,6 +12,8 @@ import (
 type Dialer struct {
 	Pools   []*Pool
 	BckAddr string
+
+	SmuxConf *smux.Config
 }
 
 func (d *Dialer) Dial(addr string, p *Pool) {
@@ -29,7 +31,7 @@ func (d *Dialer) Dial(addr string, p *Pool) {
 		c = tls.Client(c, &conf)
 	}
 
-	smuxsrv, err := smux.Server(c, nil)
+	smuxsrv, err := smux.Server(c, d.SmuxConf)
 	if err != nil {
 		return
 	}

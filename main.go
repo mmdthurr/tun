@@ -4,6 +4,8 @@ import (
 	"flag"
 	"mmd/tun/core"
 	"sync"
+
+	"github.com/xtaci/smux"
 )
 
 func main() {
@@ -11,6 +13,11 @@ func main() {
 	flag.Parse()
 
 	conf := core.GetConfig(*configpath)
+
+	// to be changed in future
+	Sc := smux.DefaultConfig()
+	Sc.KeepAliveDisabled = true
+	//
 
 	switch conf.Mode {
 	case "listener":
@@ -22,7 +29,6 @@ func main() {
 				peers[peer.Addr] = core.NewPool(0)
 				shids[peer.ShortID] = peer.Addr
 			}
-
 			switch conf.Sec {
 
 			case "tls":
@@ -37,6 +43,7 @@ func main() {
 							Cert: conf.TlsSetting.Cert,
 						},
 						Fallback: conf.FallBack,
+						SmuxConf: Sc,
 					}
 
 					l.Start()
@@ -60,6 +67,7 @@ func main() {
 							Servernames: conf.UtlsSetting.ServerNames,
 						},
 						Fallback: conf.FallBack,
+						SmuxConf: Sc,
 					}
 
 					l.Start()
@@ -73,6 +81,7 @@ func main() {
 							Type: "",
 						},
 						Fallback: conf.FallBack,
+						SmuxConf: Sc,
 					}
 
 					l.Start()
@@ -96,11 +105,11 @@ func main() {
 
 			}
 			d := core.Dialer{
-				Pools:   pools,
-				BckAddr: conf.BckAddr,
+				Pools:    pools,
+				BckAddr:  conf.BckAddr,
+				SmuxConf: Sc,
 			}
 			d.Start()
-
 			wg.Wait()
 		}
 	}

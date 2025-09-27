@@ -34,6 +34,8 @@ type Listener struct {
 	ShId  map[string]string
 
 	Fallback string
+
+	SmuxConf *smux.Config
 }
 
 func GetShId(h string) string {
@@ -97,7 +99,7 @@ func (li *Listener) Dispatch(c net.Conn) {
 	p, ok := li.Pools[inaddr]
 	if ok {
 		// peer
-		session, err := smux.Client(c, nil)
+		session, err := smux.Client(c, li.SmuxConf)
 		if err != nil {
 			return
 		}
