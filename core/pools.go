@@ -14,6 +14,7 @@ type Pool struct {
 	Tls  bool
 	Addr string
 
+	Counter     int
 	SmuxSession []*smux.Session
 }
 
@@ -44,27 +45,41 @@ func (p *Pool) Remove(session *smux.Session) bool {
 	return false
 }
 
+// only should be called from OpenStream function
+func (p *Pool) NextStream() int {
+	if len(p.SmuxSession) == 0 {
+		return -1
+	}
+	if p.Counter > len(p.SmuxSession)-1 {
+		p.Counter = 1
+		return 0
+	} else {
+		c := p.Counter
+		p.Counter = p.Counter + 1
+		return c
+	}
+}
 func (p *Pool) OpenStream() *smux.Stream {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if len(p.SmuxSession) == 0 {
-		return nil
-	}
+
 	select {
-	case <-time.After(5 * time.Second):
+	case <-time.After(3 * time.Second):
 		return nil
 	default:
-		for _, s := range p.SmuxSession {
-			stream, err := s.OpenStream()
+		for {
+			ns := p.NextStream()
+			if ns == -1 {
+				return nil
+			}
+			stream, err := p.SmuxSession[ns].OpenStream()
 			if err == smux.ErrGoAway {
 				continue
 			} else if err != nil {
-				go p.Remove(s)
+				go p.Remove(p.SmuxSession[ns])
 				continue
 			}
 			return stream
 		}
-
-		return nil
 	}
 }
