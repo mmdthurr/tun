@@ -64,20 +64,37 @@ func GetHost(buff []byte) (string, bool) {
 
 func Copy(c1, c2 net.Conn) {
 
-	defer c1.Close()
-	defer c2.Close()
-
 	var wg sync.WaitGroup
 	wg.Add(2)
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	go func() {
+		defer c1.Close()
 		defer wg.Done()
-		io.Copy(c1, c2)
+
+		select {
+
+		case <-ctx.Done():
+			return
+		default:
+			io.Copy(c1, c2)
+			cancel()
+		}
 	}()
 
 	go func() {
+		defer c2.Close()
 		defer wg.Done()
-		io.Copy(c2, c1)
+
+		select {
+
+		case <-ctx.Done():
+			return
+		default:
+			io.Copy(c2, c1)
+			cancel()
+		}
 	}()
 
 	wg.Wait()
