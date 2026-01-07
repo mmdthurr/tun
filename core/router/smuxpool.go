@@ -1,4 +1,4 @@
-package core
+package router
 
 import (
 	"sync"
@@ -24,11 +24,9 @@ func NewPool(max_size int) *Pool {
 }
 
 func (p *Pool) Add(s *smux.Session) {
-
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.SmuxSession = append(p.SmuxSession, s)
-
 }
 
 func (p *Pool) Remove(session *smux.Session) bool {
@@ -46,7 +44,7 @@ func (p *Pool) Remove(session *smux.Session) bool {
 }
 
 // only should be called from OpenStream function
-func (p *Pool) NextStream() int {
+func (p *Pool) nextStream() int {
 	if len(p.SmuxSession) == 0 {
 		return -1
 	}
@@ -59,6 +57,7 @@ func (p *Pool) NextStream() int {
 		return c
 	}
 }
+
 func (p *Pool) OpenStream() *smux.Stream {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -68,7 +67,7 @@ func (p *Pool) OpenStream() *smux.Stream {
 		return nil
 	default:
 		for {
-			ns := p.NextStream()
+			ns := p.nextStream()
 			if ns == -1 {
 				return nil
 			}

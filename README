@@ -1,0 +1,46 @@
+tun is my soloution for delivering bytes 
+to outer non restricted network.
+trying to look as legitimate as possible.
+multiplexing sessions over single transport
+made possible by smux.
+
+Documentation 
+-------------
+
+** you must check the conf.go context/buildconf.go **  
+** there is currently no hinter for bad config **
+** check example/config.json **
+
+abstract view of components:
+
+* routers: 
+    routers perform routing they act like 
+    diffrent workers will do specific task
+    based on their types
+        
+* handlers:
+    each time any connection stablished 
+    it passed to handler
+    handler act as middleware. may upgrade 
+    conn sec(tls/utls)  may filter based on addr
+    or based on http hostheader. 
+
+* listeners: 
+    each listener object assigned 
+    specific handler. 
+
+* dialers: 
+    dialer object require pool size which is amount of connection initiated by the dialer context
+
+- filter objects will effect in order they are appended to filter list.
+
+- if you want to proceed in list of filter set result tag 
+to `next`, it's preserved for this purpose, naming any tag 
+to next will result in undefined behaviour. 
+
+- routers and handlers are shared globaly so changing it via 
+api or impl may result in global change. 
+
+- smux type handler will result in two tag, **tag** and **tagpool**,  
+you may set diffrent listener or addr filter to manage s2s 
+connection which will be used for smux stream opener 

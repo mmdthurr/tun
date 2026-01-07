@@ -1,0 +1,97 @@
+{
+    "router_map": {
+        "xray": {
+            "mode": "fwtcp",
+            "back_addr": "127.0.0.1:1086"
+        },
+        "nl": {
+            "mode": "smux",
+            "retry_on_write": 3
+        },
+        "mmdta": {
+            "mode": "fwtcp",
+            "back_addr": "192.168.1.7:8080"
+        }
+    },
+    "handler_map": {
+        "listenerHandler": {
+            "mode": "serversmux",
+            "sec": {
+                "sec_mode": "multiplex",
+                "default_sec": {
+                    "sec_mode": "none"
+                },
+                "sni_map": {
+                    "ir.officialkam.biz": {
+                        "sec_mode": "tls-server",
+                        "key": "/home/mmd/Downloads/certificate/privkey3.pem",
+                        "cert": "/home/mmd/Downloads/certificate/fullchain3.pem"
+                    },
+                    "aparat.com": {
+                        "sec_mode": "utls",
+                        "pk": "6CbycRTII1mDBQ6ncav3DRrhTMGb1_d175d4YMtnCmQ",
+                        "fall_back": "aparat.com:443",
+                        "server_names": [
+                            "aparat.com",
+                            "www.aparat.com"
+                        ]
+                    }
+                }
+            },
+            "filters": [
+                {
+                    "default_tag": "next",
+                    "mode": "addr",
+                    "map": {
+                        "127.0.0.1": "nlpool"
+                    }
+                },
+                {
+                    "default_tag": "mmdta",
+                    "mode": "hostheader",
+                    "map": {
+                        "www.nl": "nl"
+                    }
+                }
+            ],
+            "routers": [
+                "nl",
+                "nlpool",
+                "mmdta"
+            ]
+        },
+        "dialerHandler": {
+            "mode": "dialersmux",
+            "sec": {
+                "sec_mode": "tls-client",
+                "allow_insecure": true,
+                "server_name": "ir.officialkam.biz"
+            },
+            "routers": [
+                "xray"
+            ]
+        }
+    },
+    "listeners": [
+        {
+            "addr": "0.0.0.0:5050",
+            "network_type": "tcp",
+            "handler_tag": "listenerHandler"
+        },
+        {
+            "addr": "127.0.0.1:5060",
+            "network_type": "ws",
+            "ws_path": "/",
+            "handler_tag": "listenerHandler"
+        }
+    ],
+    "dialers": [
+        {
+            "addr": "127.0.0.1:5060",
+            "network_type": "ws",
+            "ws_path": "/",
+            "handler_tag": "dialerHandler",
+            "dial_size": 3
+        }
+    ]
+}
