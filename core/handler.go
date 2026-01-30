@@ -55,6 +55,9 @@ type HandlerServer struct {
 func (h *HandlerServer) Handle(c net.Conn) {
 
 	c = h.ConSec.WrapConn(c)
+	if c == nil {
+		return
+	}
 
 	t := ""
 	for _, f := range h.FiltersList {
