@@ -1,7 +1,6 @@
 FROM golang:latest as build
 
 
-
 WORKDIR /go/src/tun/
 
 COPY . . 
@@ -14,9 +13,9 @@ RUN  CGO_ENABLED=0 go build -o /go/bin/tun/ -ldflags="-s -w -buildid="
 #FROM --platform=linux/amd64 gcr.io/distroless/static:nonroot
 FROM alpine:latest
 
-COPY --from=build /go/src/tun/example/test.json /etc/tun/config.json
+COPY --from=build /go/src/tun/example/config.json /etc/tun/config.json
 COPY --from=build /go/bin/tun /usr/local/bin/
 
 
-ENTRYPOINT [ "/usr/bin/tun" ]
+ENTRYPOINT [ "/usr/local/bin/tun" ]
 CMD [ "-c", "/etc/tun/config.json" ]
