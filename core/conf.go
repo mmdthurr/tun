@@ -1,12 +1,15 @@
 package core
 
 type ListenerConf struct {
-	Addr        string `json:"addr"`
+	Addr string `json:"addr"`
+	// tcp, ws, fssh
 	NetworkType string `json:"network_type"`
 	HandlerTag  string `json:"handler_tag"`
 
-	//path ws only option
+	//ws only
 	WsPath string `json:"ws_path"`
+	//fssh only
+	FsshVersion string `json:"fssh_version"`
 }
 
 type DialerConf struct {
@@ -17,6 +20,8 @@ type DialerConf struct {
 
 	//path ws only option
 	WsPath string `json:"ws_path"`
+	//fssh only
+	FsshVersion string `json:"fssh_version"`
 }
 
 type FilterConf struct {
@@ -30,17 +35,22 @@ type FilterConf struct {
 type RouterConf struct {
 	// for further smux router configuration rebuild
 	// with desired option
-	// fwtcp, smux
+	// fwtcp, smux, rfwtcp
 	Mode string `json:"mode"`
 	// for fwtcp
 	BackAddr string `json:"back_addr"`
+	// for rfwtcp
+	BackAddrs []string `json:"back_addrs"`
 	// for smux
 	RetryOnWrite int `json:"retry_on_write"`
 }
 
 type SecConf struct {
-	// tls-server tls-client ,utls, multiplex, empty for none
+	// tls-server tls-client ,utls, multiplex(sni centered), chacha(symetric), empty for none
 	SecMode string `json:"sec_mode"`
+
+	//chacha key 32bit string
+	ChaChaKey string `json:"chacha_key"`
 
 	//tls-server settign
 	Key  string `json:"key"`

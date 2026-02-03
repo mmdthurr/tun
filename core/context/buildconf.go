@@ -43,6 +43,12 @@ func BuildFromConf(config core.Conf) {
 	routerMap := make(map[string]router.Router)
 	for t, r := range config.RouterMap {
 		switch r.Mode {
+		case "rfwtcp":
+			{
+				routerMap[t] = &router.RForwarderTcp{
+					BackAddrs: r.BackAddrs,
+				}
+			}
 		case "fwtcp":
 			{
 				routerMap[t] = &router.ForwarderTcp{
@@ -78,6 +84,15 @@ func BuildFromConf(config core.Conf) {
 		var security sec.Sec
 		security = sec.None{}
 		switch h.SecObj.SecMode {
+		case "chacha":
+			{
+				var key [32]byte
+				copy(key[:], h.SecObj.ChaChaKey)
+
+				security = sec.ChaCha{
+					Key: key,
+				}
+			}
 		case "tls-client":
 			{
 				security = sec.BuildTlsClient(h.SecObj.AllowInsecure, h.SecObj.ServerName)
@@ -168,6 +183,14 @@ func BuildFromConf(config core.Conf) {
 	for _, l := range config.Listeners {
 
 		switch l.NetworkType {
+		case "fssh":
+			{
+				// no listener context directly start it off
+				go proto.Fssh{
+					Addr:    l.Addr,
+					Version: l.FsshVersion,
+				}.StartServer(handlerMap[l.HandlerTag])
+			}
 		case "tcp":
 			{
 				// no listener context directly start it off
@@ -192,6 +215,22 @@ func BuildFromConf(config core.Conf) {
 	for _, d := range config.Dialers {
 
 		switch d.NetworkType {
+
+		case "fssh":
+			{
+				{
+					go DialerContext{
+						DialPool: d.DialSize,
+						Dialer: proto.Fssh{
+							Addr:    d.Addr,
+							Version: d.FsshVersion,
+						},
+						Handler:     handlerMap[d.HandlerTag],
+						TriggerChan: make(chan DialerEvent),
+					}.Start()
+
+				}
+			}
 		case "tcp":
 			{
 				go DialerContext{

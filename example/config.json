@@ -14,6 +14,35 @@
         }
     },
     "handler_map": {
+        "l2Handler": {
+            "mode": "serversmux",
+            "sec": {
+                "sec_mode": "chacha",
+                "chacha_key": "google.com"
+                
+            },
+            "filters": [
+                {
+                    "default_tag": "next",
+                    "mode": "addr",
+                    "map": {
+                        "127.0.0.1": "nlpool"
+                    }
+                },
+                {
+                    "default_tag": "mmdta",
+                    "mode": "hostheader",
+                    "map": {
+                        "www.nl": "nl"
+                    }
+                }
+            ],
+            "routers": [
+                "nl",
+                "nlpool",
+                "mmdta"
+            ]
+        },
         "listenerHandler": {
             "mode": "serversmux",
             "sec": {
