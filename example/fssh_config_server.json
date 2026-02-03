@@ -1,0 +1,72 @@
+{
+    "router_map": {
+        "nginx": {
+            "mode": "fwtcp",
+            "back_addr": "127.0.0.1:80"
+        },
+        "us": {
+            "mode": "smux",
+            "retry_on_write": 3 
+        },
+        "ssh": {
+            "mode": "fwtcp",
+            "back_addr": "127.0.0.1:22"
+        }
+    },
+    "handler_map": {
+        "fsshH": {
+            "mode": "serversmux",
+            "sec": {
+                    "sec_mode": "none",
+                    "key": "/tls.key",
+                    "cert": "/tls.cert"
+            },
+            "filters": [
+                {
+                    "default_tag": "ssh",
+                    "mode": "addr",
+                    "map": {
+                        "8.8.8.8": "uspool"
+                    }
+                }
+            ],
+            "routers": [
+                 "ssh",
+                 "uspool"
+            ]
+        },
+        "listenerHandler": {
+            "mode": "serversmux",
+            "sec": {
+                "sec_mode": "none",
+                "filters": [
+                {
+                    "default_tag": "us",
+                    "mode": "addr",
+                    "map": {
+                        "8.8.8.8": "uspool"
+                    }
+                }
+            ],
+            "routers": [
+                "us",
+                "uspool",
+                "nginx"
+            ]
+        }
+    },
+    "listeners": [
+        {
+            "addr": "0.0.0.0:443",
+            "network_type": "tcp",
+            "handler_tag": "listenerHandler"
+        },
+        {
+            "addr": "0.0.0.0:2222",
+            "network_type": "fssh",
+            "fssh_version": "SSH-2.0-OpenSSH_4.6\r\n",
+            "handler_tag": "fsshH"
+        }
+    ]
+}
+

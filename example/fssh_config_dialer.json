@@ -1,0 +1,30 @@
+{
+    "router_map": {
+        "xray": {
+            "mode": "fwtcp",
+            "back_addr": "127.0.0.1:1086"
+        }
+    },
+    "handler_map": {
+        "dialerHandler": {
+            "mode": "dialersmux",
+            "sec": {
+                "sec_mode": "tls",
+                "allow_insecure": true,
+                "server_name": "iran.vps.com"
+            },
+            "routers": [
+                "xray"
+            ]
+        }
+    },
+    "dialers": [
+        {
+            "addr": "1.2.3.4:5050",
+            "network_type": "fssh",
+            "fssh_version": "SSH-2.0-OpenSSH_10.8\r\n",
+            "handler_tag": "dialerHandler",
+            "dial_size": 6 
+        }
+     ]
+}
