@@ -6,7 +6,7 @@
         },
         "us": {
             "mode": "smux",
-            "retry_on_write": 3 
+            "retry_on_write": 3
         },
         "ssh": {
             "mode": "fwtcp",
@@ -17,9 +17,9 @@
         "fsshH": {
             "mode": "serversmux",
             "sec": {
-                    "sec_mode": "none",
-                    "key": "/tls.key",
-                    "cert": "/tls.cert"
+                "sec_mode": "tls-server",
+                "key": "/tls.key",
+                "cert": "/tls.cert"
             },
             "filters": [
                 {
@@ -31,15 +31,16 @@
                 }
             ],
             "routers": [
-                 "ssh",
-                 "uspool"
+                "ssh",
+                "uspool"
             ]
         },
         "listenerHandler": {
             "mode": "serversmux",
             "sec": {
-                "sec_mode": "none",
-                "filters": [
+                "sec_mode": "none"
+            },
+            "filters": [
                 {
                     "default_tag": "us",
                     "mode": "addr",
@@ -69,4 +70,3 @@
         }
     ]
 }
-
