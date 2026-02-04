@@ -9,7 +9,7 @@
         "dialerHandler": {
             "mode": "dialersmux",
             "sec": {
-                "sec_mode": "tls",
+                "sec_mode": "tls-client",
                 "allow_insecure": true,
                 "server_name": "iran.vps.com"
             },
