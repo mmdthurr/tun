@@ -187,8 +187,9 @@ func BuildFromConf(config core.Conf) {
 			{
 				// no listener context directly start it off
 				go proto.Fssh{
-					Addr:    l.Addr,
-					Version: l.FsshVersion,
+					Addr:        l.Addr,
+					Version:     l.FsshVersion,
+					TrustedAddr: l.FsshTrustedAddr,
 				}.StartServer(handlerMap[l.HandlerTag])
 			}
 		case "tcp":

@@ -66,6 +66,7 @@
             "addr": "0.0.0.0:2222",
             "network_type": "fssh",
             "fssh_version": "SSH-2.0-OpenSSH_4.6\r\n",
+            "fssh_trusted_addr": ["8.8.8.8"],
             "handler_tag": "fsshH"
         }
     ]

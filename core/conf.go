@@ -10,6 +10,8 @@ type ListenerConf struct {
 	WsPath string `json:"ws_path"`
 	//fssh only
 	FsshVersion string `json:"fssh_version"`
+	//fssh server only
+	FsshTrustedAddr []string `json:"fssh_trusted_addr"`
 }
 
 type DialerConf struct {

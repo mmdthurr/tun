@@ -5,12 +5,15 @@ package proto
 import (
 	"log"
 	"net"
+	"slices"
+	"strings"
 	"tun/core"
 )
 
 type Fssh struct {
-	Addr    string
-	Version string
+	Addr        string
+	Version     string
+	TrustedAddr []string
 }
 
 func (fs Fssh) StartServer(h core.Handler) {
@@ -30,18 +33,21 @@ func (fs Fssh) StartServer(h core.Handler) {
 
 		go func() {
 
-			_, err := c.Write([]byte(fs.Version))
-			if err != nil {
-				return
-			}
+			inaddr := strings.Split(c.RemoteAddr().String(), ":")[0]
+			if slices.Contains(fs.TrustedAddr, inaddr) {
+				_, err := c.Write([]byte(fs.Version))
+				if err != nil {
+					return
+				}
 
-			vb := make([]byte, 200)
-			n, err := c.Read(vb)
-			if err != nil {
-				return
-			}
+				vb := make([]byte, 200)
+				n, err := c.Read(vb)
+				if err != nil {
+					return
+				}
 
-			log.Println(string(vb[:n]))
+				log.Print(string(vb[:n]))
+			}
 
 			h.Handle(c)
 		}()
@@ -61,7 +67,7 @@ func (fs Fssh) StartDialer(h core.Handler) {
 		return
 	}
 
-	log.Println(string(vb[:n]))
+	log.Print(string(vb[:n]))
 
 	_, err = c.Write([]byte(fs.Version))
 	if err != nil {
