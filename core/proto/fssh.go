@@ -3,11 +3,13 @@
 package proto
 
 import (
+	"bufio"
 	"log"
 	"net"
 	"slices"
 	"strings"
 	"tun/core"
+	"tun/core/utils"
 )
 
 type Fssh struct {
@@ -40,13 +42,17 @@ func (fs Fssh) StartServer(h core.Handler) {
 					return
 				}
 
-				vb := make([]byte, 200)
-				n, err := c.Read(vb)
+				reader := bufio.NewReader(c)
+				v, err := reader.ReadString('\n')
 				if err != nil {
 					return
 				}
+				c = utils.WrapperConn{
+					Conn:   c,
+					Reader: reader,
+				}
 
-				log.Print(string(vb[:n]))
+				log.Print(string(v))
 			}
 
 			h.Handle(c)

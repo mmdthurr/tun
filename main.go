@@ -7,6 +7,7 @@ import (
 
 func main() {
 
+	Version()
 	conf_path := flag.String("c", "/etc/tun/config.json", "conf path")
 	flag.Parse()
 
