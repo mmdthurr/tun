@@ -1,8 +1,8 @@
 package router
 
 import (
+	"context"
 	"sync"
-	"time"
 
 	"github.com/xtaci/smux"
 )
@@ -58,12 +58,12 @@ func (p *Pool) nextStream() int {
 	}
 }
 
-func (p *Pool) OpenStream() *smux.Stream {
+func (p *Pool) OpenStream(ctx context.Context) *smux.Stream {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
 	select {
-	case <-time.After(3 * time.Second):
+	case <-ctx.Done():
 		return nil
 	default:
 		for {

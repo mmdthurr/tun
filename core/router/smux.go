@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
@@ -37,6 +38,11 @@ func (ss *SmuxS2C) Route(c net.Conn) {
 
 	defer c.Close()
 
+	stream := ss.SmuxPool.OpenStream(context.Background())
+	if stream == nil {
+		return
+	}
+
 	buff := make([]byte, 4096)
 	n, err := c.Read(buff)
 	if err != nil {
@@ -44,17 +50,12 @@ func (ss *SmuxS2C) Route(c net.Conn) {
 	}
 	buff = buff[:n]
 
-	stream := ss.SmuxPool.OpenStream()
-	if stream == nil {
-		return
-	}
-
 	i := 0
 	for i < ss.RetryOnWrite {
 		i++
 		select {
-		case <-time.After(2 * time.Second):
-			stream = ss.SmuxPool.OpenStream()
+		case <-time.After(500 * time.Millisecond):
+			stream = ss.SmuxPool.OpenStream(context.Background())
 			if stream == nil {
 				return
 			}
