@@ -52,7 +52,9 @@ func (fs Fssh) StartServer(h core.Handler) {
 					Reader: reader,
 				}
 
-				log.Print(string(v))
+				log.Printf("%s - %s\n", inaddr, string(v))
+			} else {
+				log.Printf("%s - %s\n", inaddr, "untrusted")
 			}
 
 			h.Handle(c)

@@ -3,6 +3,7 @@ package router
 import (
 	"bytes"
 	"io"
+	"log"
 	"net"
 	"strings"
 	"tun/core/utils"
@@ -44,8 +45,12 @@ func (fhh *FilterHostHeader) GetRouter(c net.Conn) (string, net.Conn) {
 
 	h, ok := utils.GetHost(buf)
 	if !ok {
+		log.Printf("%s - %s\n", c.RemoteAddr(), "no host header")
 		return fhh.DefaultRouter, new_c
 	}
+
+
+	log.Printf("%s - %s\n", c.RemoteAddr(), h)
 
 	t, ok := fhh.HostHeaderMap[h]
 	if !ok {
@@ -68,8 +73,11 @@ func (fa *FilterAddr) GetRouter(c net.Conn) (string, net.Conn) {
 	inaddr := strings.Split(c.RemoteAddr().String(), ":")[0]
 	tag, ok := fa.AddrMap[inaddr]
 	if ok {
+		log.Printf("%s - %s\n", inaddr, tag)
 		return tag, c
 	}
+
+	log.Printf("%s - %s\n", inaddr, "default tag")
 	return fa.DefaultRouter, c
 
 }

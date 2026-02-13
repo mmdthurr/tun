@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log"
 	"net"
 	"tun/core/utils"
 )
@@ -15,6 +16,7 @@ func (f ForwarderTcp) Route(c net.Conn) {
 
 	bc, err := net.Dial("tcp", f.BackAddr)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 

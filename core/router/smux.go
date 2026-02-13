@@ -54,7 +54,7 @@ func (ss *SmuxS2C) Route(c net.Conn) {
 	for i < ss.RetryOnWrite {
 		i++
 		select {
-		case <-time.After(500 * time.Millisecond):
+		case <-time.After(2 * time.Second):
 			stream = ss.SmuxPool.OpenStream(context.Background())
 			if stream == nil {
 				return
