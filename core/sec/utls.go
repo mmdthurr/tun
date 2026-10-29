@@ -2,6 +2,7 @@ package sec
 
 import (
 	"context"
+	"crypto/ecdh"
 	"encoding/base64"
 	"log"
 	"net"
@@ -28,6 +29,12 @@ func BuildUtls(pk_ string, falb string, servernames []string) UtlsServer {
 
 	//utls for client
 	pk, err := base64.RawURLEncoding.DecodeString(pk_)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pknew, err := ecdh.X25519().NewPrivateKey(pk)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,7 +47,7 @@ func BuildUtls(pk_ string, falb string, servernames []string) UtlsServer {
 		Type:                   "tcp",
 		Dest:                   falb,
 		Xver:                   byte(0),
-		PrivateKey:             pk,
+		PrivateKey:             pknew,
 		MaxTimeDiff:            0,
 		NextProtos:             nil, // should be nil
 		SessionTicketsDisabled: true,
