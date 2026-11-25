@@ -31,8 +31,9 @@ type FilterHostHeader struct {
 
 func (fhh *FilterHostHeader) GetRouter(c net.Conn) (string, net.Conn) {
 
-	buf := make([]byte, 4096)
-	n, err := c.Read(buf)
+	//buf := make([]byte, 4096)
+	var buf [4096]byte
+	n, err := c.Read(buf[:])
 	if err != nil {
 		return "", nil
 	}
@@ -43,12 +44,11 @@ func (fhh *FilterHostHeader) GetRouter(c net.Conn) (string, net.Conn) {
 		Reader: r,
 	}
 
-	h, ok := utils.GetHost(buf)
+	h, ok := utils.GetHost(buf[:])
 	if !ok {
 		log.Printf("%s - %s\n", c.RemoteAddr(), "no host header")
 		return fhh.DefaultRouter, new_c
 	}
-
 
 	log.Printf("%s - %s\n", c.RemoteAddr(), h)
 

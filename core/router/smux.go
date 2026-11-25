@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"time"
 	"tun/core/utils"
 
 	"github.com/xtaci/smux"
@@ -43,29 +42,29 @@ func (ss *SmuxS2C) Route(c net.Conn) {
 		return
 	}
 
-	buff := make([]byte, 4096)
-	n, err := c.Read(buff)
+	var buff [4096]byte
+	//buff := make([]byte, 4096)
+	n, err := c.Read(buff[:])
 	if err != nil {
 		return
 	}
-	buff = buff[:n]
+	readbuff := buff[:n]
 
+	// this is buggy
 	i := 0
-	for i < ss.RetryOnWrite {
+	for i <= ss.RetryOnWrite {
 		i++
-		select {
-		case <-time.After(2 * time.Second):
-			stream = ss.SmuxPool.OpenStream(context.Background())
-			if stream == nil {
-				return
-			}
-		default:
-			_, err := stream.Write(buff)
-			if err != nil {
-				return
-			}
-			i = ss.RetryOnWrite
+		stream = ss.SmuxPool.OpenStream(context.Background())
+		if stream == nil {
+			return
 		}
+		_, err := stream.Write(readbuff)
+		if err != nil {
+			return
+		} else {
+			break
+		}
+
 	}
 
 	utils.Copy(stream, c)

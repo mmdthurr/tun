@@ -69,8 +69,9 @@ func (fs Fssh) StartDialer(h core.Handler) {
 		log.Printf("err: %v\n", err)
 		return
 	}
-	vb := make([]byte, 200)
-	n, err := c.Read(vb)
+	var vb [200]byte
+	//vb := make([]byte, 200)
+	n, err := c.Read(vb[:])
 	if err != nil {
 		return
 	}

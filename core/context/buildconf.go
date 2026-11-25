@@ -84,15 +84,6 @@ func BuildFromConf(config core.Conf) {
 		var security sec.Sec
 		security = sec.None{}
 		switch h.SecObj.SecMode {
-		case "chacha":
-			{
-				var key [32]byte
-				copy(key[:], h.SecObj.ChaChaKey)
-
-				security = sec.ChaCha{
-					Key: key,
-				}
-			}
 		case "tls-client":
 			{
 				security = sec.BuildTlsClient(h.SecObj.AllowInsecure, h.SecObj.ServerName)
