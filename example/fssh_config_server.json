@@ -16,6 +16,7 @@
     "handler_map": {
         "fsshH": {
             "mode": "serversmux",
+            // set sec none or multiplex if you want ssh fallback
             "sec": {
                 "sec_mode": "tls-server",
                 "key": "/tls.key",
